@@ -1,8 +1,11 @@
 name: publish-images
 
-# Build & push the epoch.me service images, multi-arch (amd64 + arm64),
-# to the DigitalOcean Container Registry. arm64 is required so the Raspberry Pi
-# (eevee) can PULL the images instead of compiling them locally.
+# Build & push the epoch.me service images to the DigitalOcean Container Registry.
+# arm64-only, built on GitHub's NATIVE arm64 runner (ubuntu-24.04-arm, free for
+# public repos) so there is NO QEMU emulation — the Rust viz build runs at native
+# speed (~10 min) instead of 1h+ under emulation. eevee (the only consumer) is
+# arm64; the DO droplet (amd64) is decommissioned, so amd64 images aren't needed.
+# To re-add amd64 later: add a second job on ubuntu-latest + a manifest-merge job.
 #
 # Requires repo secret: DIGITALOCEAN_TOKEN (used for DO CR docker login).
 
@@ -22,7 +25,7 @@ env:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
@@ -37,8 +40,6 @@ jobs:
             context: collector/whoop
     steps:
       - uses: actions/checkout@v4
-      - name: Set up QEMU (for arm64 emulation)
-        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DigitalOcean Container Registry
@@ -47,11 +48,11 @@ jobs:
           registry: registry.digitalocean.com
           username: ${{ secrets.DIGITALOCEAN_TOKEN }}
           password: ${{ secrets.DIGITALOCEAN_TOKEN }}
-      - name: Build & push ${{ matrix.name }} (amd64 + arm64)
+      - name: Build & push ${{ matrix.name }} (arm64, native)
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}:${{ matrix.context }}"
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           push: true
           tags: ${{ env.REGISTRY }}/${{ matrix.name }}:latest
           cache-from: type=gha,scope=${{ matrix.name }}
