@@ -698,18 +698,6 @@ class WhoopImporter:
                         else:
                             records_skipped += 1
                         
-                    # Distance in meters
-                    if 'distance_meter' in score_data:
-                        if self.insert_raw_data(
-                            'whoopDistance', 
-                            'Whoop Distance (meters)', 
-                            'number', 
-                            str(score_data['distance_meter']), 
-                            components
-                        ):
-                            records_inserted += 1
-                        else:
-                            records_skipped += 1
                 
             except Exception as e:
                 logger.error(f"Error processing workout record: {e}")

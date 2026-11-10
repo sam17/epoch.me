@@ -292,7 +292,6 @@ Correct endpoints (as of Dec 2025):
 11. `whoopAvgHeartRate` - Average HR during workout
 12. `whoopMaxHeartRate` - Maximum HR during workout
 13. `whoopKilojoules` - Energy expenditure
-14. `whoopDistance` - Distance covered in meters
 
 ### Running WHOOP Import
 
