@@ -61,7 +61,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
     const line = d3
       .line<{ date: Date; value: number }>()
-      .defined((d) => d.value != null && Number.isFinite(d.value))
+      .defined((d) => d.value != null && String(d.value).trim() !== "" && Number.isFinite(Number(d.value)))
       .x((d) => x(d.date))
       .y((d) => y(Math.abs(d.value)));
 
@@ -143,7 +143,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
       svg
         .selectAll(".dot")
-        .data(chartData.getData().filter((d) => d.value != null && Number.isFinite(d.value)))
+        .data(chartData.getData().filter((d) => d.value != null && String(d.value).trim() !== "" && Number.isFinite(Number(d.value))))
         .enter()
         .append("circle")
         .attr("class", "dot")
@@ -154,7 +154,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
       svg
         .selectAll(".invisible-dot")
-        .data(chartData.getData().filter((d) => d.value != null && Number.isFinite(d.value)))
+        .data(chartData.getData().filter((d) => d.value != null && String(d.value).trim() !== "" && Number.isFinite(Number(d.value))))
         .enter()
         .append("circle")
         .attr("class", "invisible-dot")
