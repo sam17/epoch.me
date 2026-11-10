@@ -1,0 +1,55 @@
+name: publish-images
+
+# Build & push the epoch.me service images, multi-arch (amd64 + arm64),
+# to the DigitalOcean Container Registry. arm64 is required so the Raspberry Pi
+# (eevee) can PULL the images instead of compiling them locally.
+#
+# Requires repo secret: DIGITALOCEAN_ACCESS_TOKEN (used for DO CR docker login).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'viz/**'
+      - 'telegram_bot/**'
+      - 'backup/**'
+      - '.github/workflows/publish.yaml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: registry.digitalocean.com/pokedesk-cr
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: epoch-viz
+            context: viz
+          - name: epoch-telegram
+            context: telegram_bot
+          - name: epoch-backup
+            context: backup
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU (for arm64 emulation)
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DigitalOcean Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.digitalocean.com
+          username: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          password: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Build & push ${{ matrix.name }} (amd64 + arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: "{{defaultContext}}:${{ matrix.context }}"
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ matrix.name }}:latest
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
