@@ -109,7 +109,7 @@ class LineChartViz extends React.Component<IProps, IState> {
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x).ticks(d3.timeWeek.every(3) as d3.TimeInterval).tickFormat(formatDate))
         .selectAll("text")
-        .style("font-size", "18px")
+        .style("font-size", "11px")
         .attr("transform", "rotate(-65)") // Rotate labels by -65 degrees
         .attr("x", -15) // Adjust x position of labels
         .attr("y", 10); // Adjust y position of labels
@@ -128,7 +128,7 @@ class LineChartViz extends React.Component<IProps, IState> {
         .attr("class", "y axis")
         .call(d3.axisLeft(y))
         .style("stroke-width", viz_details.graph_line_width)
-        .style("font-size", "18px") /* y axis */;
+        .style("font-size", "11px") /* y axis */;
 
       svg
         .append("path")
