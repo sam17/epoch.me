@@ -1,0 +1,16 @@
+services:
+  lifesheet:
+    build: .
+    image: lifesheet:latest
+    container_name: lifesheet
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - LIFESHEET_CHANNEL_ID=1516874488354967732
+      - LIFESHEET_JSON=/app/data/lifesheet.json
+      - LIFESHEET_TZ=Asia/Kolkata
+    volumes:
+      - ./data:/app/data
+      - ./lifesheet.py:/app/lifesheet.py
+      - ./service.py:/app/service.py
+      - ./lifesheet.json:/app/lifesheet.json
