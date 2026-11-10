@@ -5,7 +5,6 @@ import { ArrayDateData, RawDateData } from "src/models/date_data";
 import {
   getLastDateToBeShownInViz,
   getStartDateToBeShownInViz,
-  getContinuousDates
 } from "src/utils/date";
 import { viz_details } from "src/models/constants";
 import { timeFormat } from "d3";
@@ -35,7 +34,14 @@ class LineChartViz extends React.Component<IProps, IState> {
   private buildChart(url: string, name: string) {
     const margin = { top: 20, right: 20, bottom: 50, left: 50 };
 
-    const width = viz_details.viz_width - margin.left - margin.right;
+    const cardEl = document.querySelector("." + this.name + "12") as HTMLElement | null;
+    let cardInnerWidth = viz_details.viz_width;
+    if (cardEl) {
+      const cs = window.getComputedStyle(cardEl);
+      cardInnerWidth = cardEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    }
+    const totalWidth = Math.max(cardInnerWidth, 240);
+    const width = totalWidth - margin.left - margin.right;
     const height = viz_details.viz_height - margin.top - margin.bottom;
 
     const x = d3.scaleTime().range([0, width]);
@@ -52,20 +58,26 @@ class LineChartViz extends React.Component<IProps, IState> {
     const colourDark = this.isPositive ? positiveColorDark : negativeColorDark;
     let lastDayForViz = getLastDateToBeShownInViz(new Date());
     let startDayForViz = getStartDateToBeShownInViz(new Date());
-    const [startDate, endDate] = getContinuousDates();
 
     const line = d3
       .line<{ date: Date; value: number }>()
+      .defined((d) => d.value != null && Number.isFinite(d.value))
       .x((d) => x(d.date))
       .y((d) => y(Math.abs(d.value)));
 
-    const svg = d3.select("." + this.name + "12")
-      .selectAll("svg")
-      .data([startDate.getFullYear(), endDate.getFullYear()])
-      .enter()
+    const container = d3.select("." + this.name + "12");
+    container.selectAll("svg").remove();
+
+    const outerW = width + margin.left + margin.right;
+    const outerH = height + margin.top + margin.bottom;
+    const svg = container
       .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("viewBox", `0 0 ${outerW} ${outerH}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("display", "block")
+      .style("width", "100%")
+      .style("max-width", "100%")
+      .style("height", "auto")
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -95,9 +107,9 @@ class LineChartViz extends React.Component<IProps, IState> {
         .attr("class", "x axis")
         .style("stroke-width", viz_details.graph_line_width)
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x).tickFormat(formatDate))
+        .call(d3.axisBottom(x).ticks(d3.timeWeek.every(3) as d3.TimeInterval).tickFormat(formatDate))
         .selectAll("text")
-        .style("font-size", "7px")
+        .style("font-size", "18px")
         .attr("transform", "rotate(-65)") // Rotate labels by -65 degrees
         .attr("x", -15) // Adjust x position of labels
         .attr("y", 10); // Adjust y position of labels
@@ -116,7 +128,7 @@ class LineChartViz extends React.Component<IProps, IState> {
         .attr("class", "y axis")
         .call(d3.axisLeft(y))
         .style("stroke-width", viz_details.graph_line_width)
-        .style("font-size", "7px");
+        .style("font-size", "18px") /* y axis */;
 
       svg
         .append("path")
@@ -131,7 +143,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
       svg
         .selectAll(".dot")
-        .data(chartData.getData())
+        .data(chartData.getData().filter((d) => d.value != null && Number.isFinite(d.value)))
         .enter()
         .append("circle")
         .attr("class", "dot")
@@ -142,7 +154,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
       svg
         .selectAll(".invisible-dot")
-        .data(chartData.getData())
+        .data(chartData.getData().filter((d) => d.value != null && Number.isFinite(d.value)))
         .enter()
         .append("circle")
         .attr("class", "invisible-dot")
@@ -175,7 +187,7 @@ class LineChartViz extends React.Component<IProps, IState> {
 
   render() {
     return (
-      <Col xxl={6} xl={8} lg={8} md={12} sm={24} xs={24}>
+      <Col xxl={8} xl={12} lg={12} md={24} sm={24} xs={24}>
         <div className={"metric-card " + this.name + "12"}>
           <div className="metric-card-title">{this.displayName}</div>
           <svg
