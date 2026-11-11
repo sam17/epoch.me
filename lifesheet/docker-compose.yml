@@ -14,3 +14,13 @@ services:
       - ./lifesheet.py:/app/lifesheet.py
       - ./service.py:/app/service.py
       - ./lifesheet.json:/app/lifesheet.json
+    # joined to the epoch stack's network so it can reach the postgres db (host: epoch-db / db).
+    # DATABASE_URL in .env must use that hostname, NOT a remote IP.
+    networks:
+      - default
+      - epoch
+
+networks:
+  epoch:
+    name: epoch_default
+    external: true
